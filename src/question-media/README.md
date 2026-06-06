@@ -7,8 +7,9 @@
 - round1/folk-cars/100.png
 - round1/folk-cars/200.png
 - round1/folk-cars/300.png
-- round1/folk-cars/400.png
 - round1/folk-cars/500.png
+
+Вопрос за 400 в этой теме без картинки.
 
 Раунд 1 / Города-призраки:
 
@@ -68,11 +69,21 @@
 
 Раунд 3 / Фото с тус:
 
-- round3/party-photos/300.png
-- round3/party-photos/600.png
-- round3/party-photos/900.png
-- round3/party-photos/1200.png
-- round3/party-photos/1500.png
+Замазанное фото для вопроса:
+
+- round3/party-photos/300-question.png
+- round3/party-photos/600-question.png
+- round3/party-photos/900-question.png
+- round3/party-photos/1200-question.png
+- round3/party-photos/1500-question.png
+
+Незамазанное фото для ответа:
+
+- round3/party-photos/300-answer.png
+- round3/party-photos/600-answer.png
+- round3/party-photos/900-answer.png
+- round3/party-photos/1200-answer.png
+- round3/party-photos/1500-answer.png
 
 Раунд 3 / Друзья, которых мы заслужили:
 

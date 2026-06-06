@@ -72,7 +72,7 @@ const gameData = {
           question(100, "Как съедобно называется эта машина?", "Буханка", { image: "src/question-media/round1/folk-cars/100.png" }),
           question(200, "Эта получила название из прославившего ее фильма, какое?", "Бумер", { image: "src/question-media/round1/folk-cars/200.png" }),
           question(300, "Как в народе называли эту машину?", "Баржа", { image: "src/question-media/round1/folk-cars/300.png" }),
-          question(400, "В восточнославянской мифологии это нечисть, живущая за печкой, на болоте или в лесу, а в советской - грузовик", "Шишига", { image: "src/question-media/round1/folk-cars/400.png" }),
+          question(400, "В восточнославянской мифологии это нечисть, живущая за печкой, на болоте или в лесу, а в советской - грузовик", "Шишига"),
           question(500, "Тем же словом, как этот женский «аксессуар», который видите на экране, прозвали советский пикап ИЖ", "Шиньон", { image: "src/question-media/round1/folk-cars/500.png" }),
         ]),
         category("Алкоголь", [
@@ -172,11 +172,11 @@ const gameData = {
           question(1500, "Посмотрите видео и дайте ответ.", "Полное описание событий", { video: "src/question-media/round3/zhukov/05.mp4" }),
         ]),
         category("Фото с тус", [
-          question(300, "Фото-вопрос будет добавлен позже.", "Будет добавлено позже", { image: "src/question-media/round3/party-photos/300.png" }),
-          question(600, "Фото-вопрос будет добавлен позже.", "Будет добавлено позже", { image: "src/question-media/round3/party-photos/600.png" }),
-          question(900, "Фото-вопрос будет добавлен позже.", "Будет добавлено позже", { image: "src/question-media/round3/party-photos/900.png" }),
-          question(1200, "Фото-вопрос будет добавлен позже.", "Будет добавлено позже", { image: "src/question-media/round3/party-photos/1200.png" }),
-          question(1500, "Фото-вопрос будет добавлен позже.", "Будет добавлено позже", { image: "src/question-media/round3/party-photos/1500.png" }),
+          question(300, "Кто или что замазано на фото?", "Фото без замазки", { image: "src/question-media/round3/party-photos/300-question.png", answerImage: "src/question-media/round3/party-photos/300-answer.png" }),
+          question(600, "Кто или что замазано на фото?", "Фото без замазки", { image: "src/question-media/round3/party-photos/600-question.png", answerImage: "src/question-media/round3/party-photos/600-answer.png" }),
+          question(900, "Кто или что замазано на фото?", "Фото без замазки", { image: "src/question-media/round3/party-photos/900-question.png", answerImage: "src/question-media/round3/party-photos/900-answer.png" }),
+          question(1200, "Кто или что замазано на фото?", "Фото без замазки", { image: "src/question-media/round3/party-photos/1200-question.png", answerImage: "src/question-media/round3/party-photos/1200-answer.png" }),
+          question(1500, "Кто или что замазано на фото?", "Фото без замазки", { image: "src/question-media/round3/party-photos/1500-question.png", answerImage: "src/question-media/round3/party-photos/1500-answer.png" }),
         ]),
         category("Славянская мифология", [
           question(300, "Так называли мифическую райскую птицу, о которой есть присказка, что ОНА - птица вещая", "Гамаюн"),
@@ -271,6 +271,7 @@ const initialState = {
   showAnswer: false,
   lastClosedQuestion: null,
   finalCategory: null,
+  finalEliminatedCategories: [],
   finalBets: {},
   finalBetsAccepted: false,
   finalResults: {},
@@ -525,6 +526,7 @@ function App() {
       screen: "game",
       currentRoundIndex: gameData.rounds.length - 1,
       finalCategory: null,
+      finalEliminatedCategories: [],
       finalBets: {},
       finalBetsAccepted: false,
       finalResults: {},
@@ -574,17 +576,21 @@ function App() {
   };
 
   const finishFinal = () => {
-    setState((current) => withHistory(current, {
-      players: current.players.map((player) => {
-        const bet = Number(current.finalBets[player.id] || 0);
-        const result = current.finalResults[player.id];
+    setState((current) => {
+      if (!current.players.every((player) => current.finalResults[player.id] !== undefined)) return current;
 
-        if (result === "correct") return { ...player, score: player.score + bet };
-        if (result === "wrong") return { ...player, score: player.score - bet };
-        return player;
-      }),
-      screen: "results",
-    }));
+      return withHistory(current, {
+        players: current.players.map((player) => {
+          const bet = Number(current.finalBets[player.id] || 0);
+          const result = current.finalResults[player.id];
+
+          if (result === "correct") return { ...player, score: player.score + bet };
+          if (result === "wrong") return { ...player, score: player.score - bet };
+          return player;
+        }),
+        screen: "results",
+      });
+    });
   };
 
   const startGame = () => {
@@ -596,13 +602,24 @@ function App() {
     setState((current) => withHistory(current, { screen: "start", selectedQuestion: null, showAnswer: false }));
   };
 
-  const selectFinalCategory = (category) => {
-    setState((current) => withHistory(current, {
-      finalCategory: category,
-      finalBetsAccepted: false,
-      finalResults: {},
-      finalAnswerShown: false,
-    }));
+  const eliminateFinalCategory = (categoryTitle) => {
+    setState((current) => {
+      if (current.finalCategory) return current;
+
+      const eliminated = new Set(current.finalEliminatedCategories || []);
+      eliminated.add(categoryTitle);
+
+      const remainingCategories = gameData.finalRound.availableCategories.filter((item) => !eliminated.has(item.title));
+
+      return withHistory(current, {
+        finalEliminatedCategories: [...eliminated],
+        finalCategory: remainingCategories.length === 1 ? remainingCategories[0] : null,
+        finalBets: {},
+        finalBetsAccepted: false,
+        finalResults: {},
+        finalAnswerShown: false,
+      });
+    });
   };
 
   const showFinalAnswer = () => {
@@ -703,7 +720,7 @@ function App() {
             applyFinalResult={applyFinalResult}
             finishFinal={finishFinal}
             returnFromFinal={returnFromFinal}
-            selectFinalCategory={selectFinalCategory}
+            eliminateFinalCategory={eliminateFinalCategory}
             showFinalAnswer={showFinalAnswer}
             undoLastAction={undoLastAction}
             canUndo={canUndo}
@@ -1071,9 +1088,11 @@ function PlayersPanel({ players, leaderId, scoreEdit, setScoreEdit, setManualSco
 
 function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, closeQuestion, onClose }) {
   const [chosenPlayer, setChosenPlayer] = useState("");
+  const [mediaRevealed, setMediaRevealed] = useState(false);
 
   React.useEffect(() => {
     setChosenPlayer("");
+    setMediaRevealed(false);
   }, [selectedQuestion]);
 
   if (!selectedQuestion) return null;
@@ -1092,32 +1111,57 @@ function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, c
         </div>
 
         <div className="min-h-44 rounded-3xl border border-white/10 bg-black/25 p-8 text-center text-3xl font-bold leading-snug md:text-4xl">
+          <div>{selectedQuestion.question.question}</div>
           {selectedQuestion.question.video && (
             <video
               src={selectedQuestion.question.video}
               controls
               playsInline
-              className="mx-auto mb-6 max-h-[48vh] w-full rounded-2xl bg-black object-contain"
+              className="mx-auto mt-6 max-h-[48vh] w-full rounded-2xl bg-black object-contain"
               onError={(event) => {
                 event.currentTarget.style.display = "none";
               }}
             />
           )}
           {selectedQuestion.question.image && (
-            <img
-              src={selectedQuestion.question.image}
-              alt=""
-              className="mx-auto mb-6 max-h-[48vh] w-full rounded-2xl object-contain"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-              }}
-            />
+            <button
+              type="button"
+              onClick={() => setMediaRevealed(true)}
+              className="group relative mx-auto mt-6 block w-full overflow-hidden rounded-2xl bg-black/30 outline-none"
+              aria-label="Открыть фото"
+            >
+              <img
+                src={selectedQuestion.question.image}
+                alt=""
+                className={cls(
+                  "mx-auto max-h-[48vh] w-full object-contain transition duration-500",
+                  mediaRevealed ? "blur-0 brightness-100" : "scale-[1.01] blur-sm brightness-90"
+                )}
+                onError={(event) => {
+                  event.currentTarget.parentElement.style.display = "none";
+                }}
+              />
+              {!mediaRevealed && (
+                <span className="absolute inset-0 flex items-center justify-center bg-black/10 text-5xl text-white/70 transition group-hover:bg-black/0">
+                  <Icon name="eye" />
+                </span>
+              )}
+            </button>
           )}
-          {selectedQuestion.question.question}
         </div>
 
         {showAnswer && (
           <div className="mt-4 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-6 text-center text-2xl text-emerald-100">
+            {selectedQuestion.question.answerImage && (
+              <img
+                src={selectedQuestion.question.answerImage}
+                alt=""
+                className="mx-auto mb-5 max-h-[48vh] w-full rounded-2xl object-contain"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+            )}
             {selectedQuestion.question.answer}
           </div>
         )}
@@ -1160,6 +1204,33 @@ function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, c
   );
 }
 
+function FinalProgress({ currentStep }) {
+  const steps = [
+    { id: "topics", label: "Тема" },
+    { id: "bets", label: "Ставки" },
+    { id: "question", label: "Вопрос" },
+    { id: "answer", label: "Ответ" },
+    { id: "results", label: "Итоги" },
+  ];
+  const activeIndex = Math.max(0, steps.findIndex((step) => step.id === currentStep));
+
+  return (
+    <div className="mt-7 grid grid-cols-2 gap-2 rounded-[2rem] border border-white/10 bg-white/[0.05] p-2 sm:grid-cols-5">
+      {steps.map((step, index) => (
+        <div
+          key={step.id}
+          className={cls(
+            "rounded-2xl px-3 py-3 text-center text-sm font-semibold",
+            index <= activeIndex ? "bg-white text-slate-950" : "bg-white/5 text-white/45"
+          )}
+        >
+          {step.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function FinalRound({
   state,
   players,
@@ -1169,14 +1240,18 @@ function FinalRound({
   applyFinalResult,
   finishFinal,
   returnFromFinal,
-  selectFinalCategory,
+  eliminateFinalCategory,
   showFinalAnswer,
   undoLastAction,
   canUndo,
 }) {
   const category = state.finalCategory;
-  const allBetsEntered = players.every((player) => state.finalBets[player.id] !== undefined);
+  const eliminatedCategories = state.finalEliminatedCategories || [];
+  const remainingCategories = gameData.finalRound.availableCategories.filter((item) => !eliminatedCategories.includes(item.title));
+  const allBetsEntered = players.length > 0 && players.every((player) => state.finalBets[player.id] !== undefined);
   const betsAccepted = Boolean(state.finalBetsAccepted);
+  const allFinalResultsEntered = players.length > 0 && players.every((player) => state.finalResults[player.id] !== undefined);
+  const currentStep = !category ? "topics" : !betsAccepted ? "bets" : !state.finalAnswerShown ? "question" : "answer";
 
   return (
     <div className="mx-auto max-w-5xl py-8">
@@ -1198,18 +1273,33 @@ function FinalRound({
           Отменить
         </Button>
       </div>
+      <FinalProgress currentStep={currentStep} />
 
       {!category && (
-        <div className="mt-8 grid gap-4 md:grid-cols-5">
+        <div className="mt-8 space-y-5">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 text-center">
+            <div className="text-sm text-white/45">Исключение тем</div>
+            <div className="mt-1 text-2xl font-black">{remainingCategories.length} из {gameData.finalRound.availableCategories.length}</div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-5">
           {gameData.finalRound.availableCategories.map((item) => (
             <button
               key={item.title}
-              onClick={() => selectFinalCategory(item)}
-              className="rounded-3xl border border-white/10 bg-white/[0.07] p-6 text-xl font-bold transition hover:scale-[1.03] hover:bg-indigo-500/30"
+              disabled={eliminatedCategories.includes(item.title)}
+              onClick={() => eliminateFinalCategory(item.title)}
+              className={cls(
+                "min-h-28 rounded-3xl border p-6 text-xl font-bold transition",
+                eliminatedCategories.includes(item.title)
+                  ? "border-white/5 bg-white/[0.03] text-white/20"
+                  : "border-white/10 bg-white/[0.07] hover:scale-[1.03] hover:bg-indigo-500/30"
+              )}
             >
-              {item.title}
+              <span>{item.title}</span>
+              {eliminatedCategories.includes(item.title) && <span className="mt-2 block text-sm font-medium">убрана</span>}
             </button>
           ))}
+          </div>
+          <div className="text-center text-sm text-white/50">Кликайте по темам, которые убираете. Финальная тема останется последней.</div>
         </div>
       )}
 
@@ -1230,9 +1320,9 @@ function FinalRound({
                   <span className="text-white/55">{player.score} очков</span>
                 </div>
                 <input
-                  type="number"
-                  min="0"
-                  max={Math.max(0, player.score)}
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={state.finalBets[player.id] ?? ""}
                   disabled={betsAccepted}
                   onChange={(event) => saveBet(player.id, event.target.value)}
@@ -1314,7 +1404,11 @@ function FinalRound({
                       </div>
                     ))}
                   </div>
-                  <Button onClick={finishFinal} className="mt-6 w-full rounded-2xl bg-white py-6 text-lg font-bold text-slate-950 hover:bg-white/90">
+                  <Button
+                    disabled={!allFinalResultsEntered}
+                    onClick={finishFinal}
+                    className="mt-6 w-full rounded-2xl bg-white py-6 text-lg font-bold text-slate-950 hover:bg-white/90"
+                  >
                     Показать результаты
                   </Button>
                 </>
