@@ -15,6 +15,8 @@ function Icon({ name, className = "" }) {
     home: "⌂",
     settings: "⚙",
     undo: "↶",
+    plus: "+",
+    minus: "−",
   };
   return (
     <span className={`inline-flex items-center justify-center leading-none ${className}`} aria-hidden="true">
@@ -431,12 +433,18 @@ function App() {
   };
 
   const updateScore = (playerId, delta) => {
-    setState((current) => ({
-      ...current,
+    setState((current) => withHistory(current, {
       players: current.players.map((player) =>
         player.id === playerId ? { ...player, score: player.score + delta } : player
       ),
     }));
+  };
+
+  const adjustManualScore = (playerId, value, direction) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed <= 0) return;
+    updateScore(playerId, parsed * direction);
+    setScoreEdit((current) => ({ ...current, [playerId]: "" }));
   };
 
   const setManualScore = (playerId, value) => {
@@ -706,6 +714,7 @@ function App() {
               scoreEdit={scoreEdit}
               setScoreEdit={setScoreEdit}
               setManualScore={setManualScore}
+              adjustManualScore={adjustManualScore}
             />
           </div>
         )}
@@ -1048,7 +1057,7 @@ function GameBoard({ round, currentRoundIndex, usedQuestions, openQuestion }) {
   );
 }
 
-function PlayersPanel({ players, leaderId, scoreEdit, setScoreEdit, setManualScore }) {
+function PlayersPanel({ players, leaderId, scoreEdit, setScoreEdit, setManualScore, adjustManualScore }) {
   return (
     <aside className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-4 backdrop-blur lg:sticky lg:top-6 lg:h-fit">
       <div className="mb-4 flex items-center gap-2 text-xl font-bold">
@@ -1068,14 +1077,36 @@ function PlayersPanel({ players, leaderId, scoreEdit, setScoreEdit, setManualSco
               {player.id === leaderId && <Icon name="crown" className="text-yellow-200" />}
             </div>
             <div className="mt-1 text-3xl font-black">{player.score}</div>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 grid grid-cols-[1fr_auto_auto_auto] gap-2">
               <input
+                type="number"
                 value={scoreEdit[player.id] || ""}
                 onChange={(event) => setScoreEdit((current) => ({ ...current, [player.id]: event.target.value }))}
-                placeholder="очки"
+                placeholder="сумма"
                 className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm outline-none placeholder:text-white/30"
               />
-              <Button onClick={() => setManualScore(player.id, scoreEdit[player.id])} className="rounded-xl bg-white px-3 py-2 text-slate-950 hover:bg-white/90">
+              <Button
+                onClick={() => adjustManualScore(player.id, scoreEdit[player.id], -1)}
+                className="h-10 w-10 rounded-xl border border-red-200/20 bg-red-400/15 text-lg font-black text-red-50 hover:bg-red-400/25"
+                title="Отнять указанную сумму"
+                aria-label={`Отнять очки у игрока ${player.name}`}
+              >
+                <Icon name="minus" />
+              </Button>
+              <Button
+                onClick={() => adjustManualScore(player.id, scoreEdit[player.id], 1)}
+                className="h-10 w-10 rounded-xl border border-emerald-200/20 bg-emerald-400/15 text-lg font-black text-emerald-50 hover:bg-emerald-400/25"
+                title="Прибавить указанную сумму"
+                aria-label={`Прибавить очки игроку ${player.name}`}
+              >
+                <Icon name="plus" />
+              </Button>
+              <Button
+                onClick={() => setManualScore(player.id, scoreEdit[player.id])}
+                className="h-10 w-10 rounded-xl bg-white text-slate-950 hover:bg-white/90"
+                title="Выставить точный счет"
+                aria-label={`Выставить точный счет игроку ${player.name}`}
+              >
                 <Icon name="settings" />
               </Button>
             </div>
