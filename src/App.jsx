@@ -1098,9 +1098,9 @@ function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, c
   if (!selectedQuestion) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm md:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm">
       <div className="my-4 w-full max-w-5xl rounded-[2rem] border border-white/10 bg-[#101426] p-5 shadow-2xl md:p-7">
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="sticky top-0 z-10 -mx-2 mb-5 flex items-start justify-between gap-4 rounded-3xl bg-[#101426]/95 px-2 py-2 backdrop-blur">
           <div>
             <div className="text-sm text-cyan-200/70">{selectedQuestion.category}</div>
             <div className="text-3xl font-black">{selectedQuestion.question.value}</div>
