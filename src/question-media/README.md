@@ -2,6 +2,14 @@
 
 Имена файлов уже прописаны в коде. Если файла пока нет, игра просто покажет текст вопроса. Как только файл появится по нужному пути, он начнет показываться в вопросе.
 
+Раунд 1 / Народный автопром:
+
+- round1/folk-cars/100.png
+- round1/folk-cars/200.png
+- round1/folk-cars/300.png
+- round1/folk-cars/400.png
+- round1/folk-cars/500.png
+
 Раунд 1 / Города-призраки:
 
 - round1/ghost-cities/100.png
@@ -49,14 +57,6 @@
 - round2/middle-earth/600.png
 - round2/middle-earth/800.png
 - round2/middle-earth/1000.png
-
-Раунд 2 / Огненная тема:
-
-- round2/fire/200.png
-- round2/fire/400.png
-- round2/fire/600.png
-- round2/fire/800.png
-- round2/fire/1000.png
 
 Раунд 3 / Жуков:
 
