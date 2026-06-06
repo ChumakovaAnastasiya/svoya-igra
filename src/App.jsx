@@ -756,7 +756,7 @@ function WelcomeOverlay({ onDismiss }) {
     >
       <div className="flex min-h-64 w-full max-w-3xl items-center justify-center rounded-[2rem] border border-white/15 bg-[#101426]/95 px-8 py-12 text-center shadow-2xl">
         <div className="max-w-xl text-base font-medium leading-relaxed text-white/90 md:text-lg">
-          Игра создана при поддержке Владимира Хиля
+          Автор игры — Владимир Хиль
         </div>
       </div>
     </div>
@@ -1098,8 +1098,8 @@ function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, c
   if (!selectedQuestion) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-4xl rounded-[2rem] border border-white/10 bg-[#101426] p-7 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm md:items-center">
+      <div className="my-4 w-full max-w-5xl rounded-[2rem] border border-white/10 bg-[#101426] p-5 shadow-2xl md:p-7">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <div className="text-sm text-cyan-200/70">{selectedQuestion.category}</div>
@@ -1135,7 +1135,7 @@ function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, c
                 alt=""
                 className={cls(
                   "mx-auto max-h-[48vh] w-full object-contain transition duration-500",
-                  mediaRevealed ? "blur-0 brightness-100" : "scale-[1.01] blur-sm brightness-90"
+                  mediaRevealed ? "blur-0 brightness-100" : "scale-[1.02] blur-xl brightness-50"
                 )}
                 onError={(event) => {
                   event.currentTarget.parentElement.style.display = "none";
@@ -1151,7 +1151,7 @@ function QuestionModal({ selectedQuestion, showAnswer, setShowAnswer, players, c
         </div>
 
         {showAnswer && (
-          <div className="mt-4 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-6 text-center text-2xl text-emerald-100">
+          <div className="mt-4 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5 text-center text-2xl text-emerald-100 md:p-6">
             {selectedQuestion.question.answerImage && (
               <img
                 src={selectedQuestion.question.answerImage}
