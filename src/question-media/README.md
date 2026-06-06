@@ -44,11 +44,11 @@
 
 Раунд 2 / Интернет-культура:
 
-- round2/internet-culture/01.png
-- round2/internet-culture/02.png
-- round2/internet-culture/03.png
-- round2/internet-culture/04.png
-- round2/internet-culture/05.png
+- round2/internet-culture/100.png
+- round2/internet-culture/200.png
+- round2/internet-culture/300.png
+- round2/internet-culture/400.png
+- round2/internet-culture/500.png
 
 Раунд 2 / География Средиземья:
 

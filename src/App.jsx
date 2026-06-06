@@ -138,11 +138,11 @@ const gameData = {
           question(1000, "Определите навык по картинке.", "Ухоженный - Починка", { image: "src/question-media/round2/kmet/1000.png" }),
         ]),
         category("Интернет-культура", [
-          question(300, "Назовите год по картинке.", "2017", { image: "src/question-media/round2/internet-culture/01.png" }),
-          question(300, "Назовите год по картинке.", "2015", { image: "src/question-media/round2/internet-culture/02.png" }),
-          question(300, "Назовите год по картинке.", "2008", { image: "src/question-media/round2/internet-culture/03.png" }),
-          question(300, "Назовите год по картинке.", "2019", { image: "src/question-media/round2/internet-culture/04.png" }),
-          question(300, "Назовите год по картинке.", "2013", { image: "src/question-media/round2/internet-culture/05.png" }),
+          question(300, "Назовите год по картинке.", "2017", { image: "src/question-media/round2/internet-culture/100.png" }),
+          question(300, "Назовите год по картинке.", "2015", { image: "src/question-media/round2/internet-culture/200.png" }),
+          question(300, "Назовите год по картинке.", "2008", { image: "src/question-media/round2/internet-culture/300.png" }),
+          question(300, "Назовите год по картинке.", "2019", { image: "src/question-media/round2/internet-culture/400.png" }),
+          question(300, "Назовите год по картинке.", "2013", { image: "src/question-media/round2/internet-culture/500.png" }),
         ]),
         category("География Средиземья", [
           question(200, "Вопрос на скорость реакции. В какой стране снимали трилогию «Властелин колец»?", "Новая Зеландия", { image: "src/question-media/round2/middle-earth/200.png" }),
@@ -272,6 +272,7 @@ const initialState = {
   lastClosedQuestion: null,
   finalCategory: null,
   finalBets: {},
+  finalBetsAccepted: false,
   finalResults: {},
   finalAnswerShown: false,
   history: [],
@@ -353,6 +354,7 @@ function App() {
   const [newPlayer, setNewPlayer] = useState("");
   const [scoreEdit, setScoreEdit] = useState({});
   const [message, setMessage] = useState("");
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const sortedPlayers = useMemo(() => [...state.players].sort((a, b) => b.score - a.score), [state.players]);
   const leaderId = sortedPlayers[0]?.id;
@@ -365,6 +367,14 @@ function App() {
       console.warn("Не удалось сохранить игру:", error);
     }
   }, [state]);
+
+  useEffect(() => {
+    if (!showWelcome) return;
+
+    const dismissWelcome = () => setShowWelcome(false);
+    window.addEventListener("keydown", dismissWelcome, { once: true });
+    return () => window.removeEventListener("keydown", dismissWelcome);
+  }, [showWelcome]);
 
   const resetGame = () => {
     if (!window.confirm("Сбросить всю игру? Очки, сыгранные вопросы и финал будут очищены.")) return;
@@ -516,12 +526,24 @@ function App() {
       currentRoundIndex: gameData.rounds.length - 1,
       finalCategory: null,
       finalBets: {},
+      finalBetsAccepted: false,
       finalResults: {},
       finalAnswerShown: false,
     }));
   };
 
   const saveBet = (playerId, rawValue) => {
+    if (state.finalBetsAccepted) return;
+
+    if (rawValue === "") {
+      setState((current) => {
+        const finalBets = { ...current.finalBets };
+        delete finalBets[playerId];
+        return { ...current, finalBets };
+      });
+      return;
+    }
+
     const player = state.players.find((item) => item.id === playerId);
     let value = Math.max(0, Number(rawValue) || 0);
 
@@ -529,6 +551,22 @@ function App() {
     if (player && player.score <= 0) value = 0;
 
     setState((current) => ({ ...current, finalBets: { ...current.finalBets, [playerId]: value } }));
+  };
+
+  const acceptFinalBets = () => {
+    setState((current) => withHistory(current, {
+      finalBetsAccepted: true,
+      finalAnswerShown: false,
+      finalResults: {},
+    }));
+  };
+
+  const editFinalBets = () => {
+    setState((current) => withHistory(current, {
+      finalBetsAccepted: false,
+      finalAnswerShown: false,
+      finalResults: {},
+    }));
   };
 
   const applyFinalResult = (playerId, result) => {
@@ -559,7 +597,12 @@ function App() {
   };
 
   const selectFinalCategory = (category) => {
-    setState((current) => withHistory(current, { finalCategory: category }));
+    setState((current) => withHistory(current, {
+      finalCategory: category,
+      finalBetsAccepted: false,
+      finalResults: {},
+      finalAnswerShown: false,
+    }));
   };
 
   const showFinalAnswer = () => {
@@ -655,6 +698,8 @@ function App() {
             state={state}
             players={state.players}
             saveBet={saveBet}
+            acceptFinalBets={acceptFinalBets}
+            editFinalBets={editFinalBets}
             applyFinalResult={applyFinalResult}
             finishFinal={finishFinal}
             returnFromFinal={returnFromFinal}
@@ -678,6 +723,25 @@ function App() {
         closeQuestion={closeQuestion}
         onClose={() => setState((current) => ({ ...current, selectedQuestion: null }))}
       />
+      {showWelcome && <WelcomeOverlay onDismiss={() => setShowWelcome(false)} />}
+    </div>
+  );
+}
+
+function WelcomeOverlay({ onDismiss }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label="Закрыть приветствие"
+      onPointerDown={onDismiss}
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/65 p-4 backdrop-blur-md"
+    >
+      <div className="flex min-h-64 w-full max-w-3xl items-center justify-center rounded-[2rem] border border-white/15 bg-[#101426]/95 px-8 py-12 text-center shadow-2xl">
+        <div className="max-w-xl text-base font-medium leading-relaxed text-white/90 md:text-lg">
+          Игра создана при поддержке Владимира Хиля
+        </div>
+      </div>
     </div>
   );
 }
@@ -1100,6 +1164,8 @@ function FinalRound({
   state,
   players,
   saveBet,
+  acceptFinalBets,
+  editFinalBets,
   applyFinalResult,
   finishFinal,
   returnFromFinal,
@@ -1110,6 +1176,7 @@ function FinalRound({
 }) {
   const category = state.finalCategory;
   const allBetsEntered = players.every((player) => state.finalBets[player.id] !== undefined);
+  const betsAccepted = Boolean(state.finalBetsAccepted);
 
   return (
     <div className="mx-auto max-w-5xl py-8">
@@ -1167,19 +1234,36 @@ function FinalRound({
                   min="0"
                   max={Math.max(0, player.score)}
                   value={state.finalBets[player.id] ?? ""}
+                  disabled={betsAccepted}
                   onChange={(event) => saveBet(player.id, event.target.value)}
                   placeholder="Ставка"
-                  className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 outline-none"
+                  className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 outline-none disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
             ))}
           </div>
 
-          {allBetsEntered && (
+          {!betsAccepted && (
+            <Button
+              disabled={!allBetsEntered}
+              onClick={acceptFinalBets}
+              className="w-full rounded-2xl bg-white py-5 text-lg font-bold text-slate-950 hover:bg-white/90"
+            >
+              Принять ставки
+            </Button>
+          )}
+
+          {betsAccepted && (
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-7">
               <div className="mb-4 text-center text-3xl font-black">{category.question}</div>
               {!state.finalAnswerShown ? (
-                <div className="flex justify-center">
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button
+                    onClick={editFinalBets}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 text-white hover:bg-white/10"
+                  >
+                    Изменить ставки
+                  </Button>
                   <Button
                     onClick={showFinalAnswer}
                     className="rounded-2xl bg-white px-6 py-6 text-slate-950 hover:bg-white/90"
